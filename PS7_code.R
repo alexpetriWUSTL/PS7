@@ -1,6 +1,5 @@
 install.packages("stringr")
 library(dplyr)
-library(stringr)
 
 setwd("C:/Users/Alex Petri/Downloads/GithubASP/PS7")
 crimeData <- read.csv("March2018.csv")
@@ -26,11 +25,31 @@ crimeType_Neighborhood <- crimeData %>%
 
 arrange(crimeType_Neighborhood, desc(count)) #sort in descending order to find the highest crime neighborhood
 
-#4
+
+#4 District 5 has the highest robbery proportion
+library(stringr)
+
 crimeType_Robbery <- crimeData %>%
-  filter(str_detect(Description, paste("ROBBERY", collapse="|"))) %>%
-  group_by(District) %>%
-  summarise(count = n())
+  filter(str_detect(Description, "ROBBERY")) %>% #filter out all observations that include robbery in description
+  group_by(District) %>% #group by district 
+  summarise(countRobbery = n()) #count up the robbery observations
+
+crimeType_All <- crimeData %>% #just group and summarise by crime in general
+  group_by(District) %>% 
+  summarise(countAll = n())
+  
+district_Proportion <- crimeType_All %>%
+  full_join(crimeType_Robbery, by = "District") %>% #full join because i need all rows (district 0 has no robberies but still needs to be included)
+  mutate(countRobbery, proportion = countRobbery/countAll) #create a new column with the proportion
+
+arrange(district_Proportion, desc(proportion)) #sort in descending order to find the highest crime neighborhood
 
 
+#5
+library(ggplot2)
+  
+crimes <- crimeType_Day %>%
 
+ggplot(data=crimeType_Day) +
+geom_line(mapping = aes(x = day, y = count))
+?geom_line
